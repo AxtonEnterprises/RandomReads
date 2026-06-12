@@ -1,40 +1,48 @@
 const API_BASE = 'https://gutendex.com/books';
 
-const fallbackBooks = [
-  {
-    id: 1342,
-    title: 'Pride and Prejudice',
-    authors: [{ name: 'Jane Austen' }],
-    subjects: ['Fiction', 'Romance', 'England'],
-    formats: {
-      'text/html': 'https://www.gutenberg.org/files/1342/1342-h/1342-h.htm',
-      'text/plain; charset=us-ascii': 'https://www.gutenberg.org/files/1342/1342-0.txt'
-    }
-  },
-  {
-    id: 84,
-    title: 'Frankenstein; Or, The Modern Prometheus',
-    authors: [{ name: 'Mary Wollstonecraft Shelley' }],
-    subjects: ['Science fiction', 'Horror tales'],
-    formats: {
-      'text/html': 'https://www.gutenberg.org/files/84/84-h/84-h.htm',
-      'text/plain; charset=utf-8': 'https://www.gutenberg.org/files/84/84-0.txt'
-    }
-  },
-  {
-    id: 2701,
-    title: 'Moby-Dick; Or, The Whale',
-    authors: [{ name: 'Herman Melville' }],
-    subjects: ['Adventure stories', 'Whaling'],
-    formats: {
-      'text/html': 'https://www.gutenberg.org/files/2701/2701-h/2701-h.htm',
-      'text/plain; charset=utf-8': 'https://www.gutenberg.org/files/2701/2701-0.txt'
-    }
-  }
-];
+export async function searchBooks(query = '') {
+  const url = query
+    ? `${API_BASE}/?search=${encodeURIComponent(query)}`
+    : API_BASE;
 
-export function normalizeBook(book) {
-  const author = book.authors?.map((item) => item.name).join(', ') || 'Unknown author';
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch books');
+  }
+
+  const data = await response.json();
+  return data.results || [];
+}
+
+export async function getRandomBook() {
+  const page = Math.floor(Math.random() * 50) + 1;
+  const response = await fetch(`${API_BASE}/?page=${page}`);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch random books');
+  }
+
+  const data = await response.json();
+  const books = data.results || [];
+
+  if (!books.length) {
+    throw new Error('No books found');
+  }
+
+  return books[Math.floor(Math.random() * books.length)];
+}
+
+export function getReadableTextUrl(book) {
+  if (!book?.formats) return null;
+
+  return (
+    book.formats['text/html'] ||
+    book.formats['text/plain; charset=utf-8'] ||
+    book.formats['text/plain'] ||
+    null
+  );
+}  const author = book.authors?.map((item) => item.name).join(', ') || 'Unknown author';
   const cover = book.formats?.['image/jpeg'] || '';
   const html = Object.entries(book.formats || {}).find(([key]) => key.includes('text/html'))?.[1] || '';
   const text = Object.entries(book.formats || {}).find(([key]) => key.includes('text/plain'))?.[1] || '';
