@@ -8,17 +8,17 @@ import About from './pages/About.jsx';
 
 export default function App() {
   return (
-    <div className="app-shell">
+    <>
       <Header />
-      <main className="page-wrap">
+      <main className="app-main">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/reader/:bookId" element={<Reader />} />
+          <Route path="/reader/:id" element={<Reader />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </main>
-    </div>
+    </>
   );
 }
