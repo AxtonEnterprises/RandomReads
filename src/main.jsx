@@ -9,7 +9,7 @@ registerSW({ immediate: true });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter basename="/RandomReads">
+    <BrowserRouter>
       <App />
     </BrowserRouter>
   </React.StrictMode>
