@@ -5,6 +5,38 @@ import Search from './pages/Search.jsx';
 import Reader from './pages/Reader.jsx';
 import Journal from './pages/Journal.jsx';
 import About from './pages/About.jsx';
+import { useEffect } from "react";
+import { db } from "./firebase";
+import { doc, getDoc } from "firebase/firestore";
+
+function App() {
+
+  useEffect(() => {
+    async function testFirebase() {
+      try {
+        const snap = await getDoc(doc(db, "test", "welcome"));
+
+        if (snap.exists()) {
+          console.log("Firebase:", snap.data());
+        } else {
+          console.log("Document not found");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    testFirebase();
+  }, []);
+
+  return (
+    <div>
+      Random Reads
+    </div>
+  );
+}
+
+export default App;
 
 export default function App() {
   return (
