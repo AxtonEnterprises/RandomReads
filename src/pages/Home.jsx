@@ -10,6 +10,26 @@ import { db } from "../firebase";
 export default function Home() {
   const [book, setBook] = useState(null);
   const [status, setStatus] = useState('');
+  const [firebaseMessage, setFirebaseMessage] = useState("Checking Firebase...");
+
+useEffect(() => {
+  async function loadFirebaseTest() {
+    try {
+      const snap = await getDoc(doc(db, "test", "welcome"));
+
+      if (snap.exists()) {
+        setFirebaseMessage(snap.data().message);
+      } else {
+        setFirebaseMessage("Firebase connected, but test document not found.");
+      }
+    } catch (err) {
+      setFirebaseMessage("Firebase error. Check Firestore rules or config.");
+      console.error(err);
+    }
+  }
+
+  loadFirebaseTest();
+}, []);
 
   async function handleRandomBook() {
     setStatus('Finding a book...');
