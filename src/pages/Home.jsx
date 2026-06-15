@@ -57,6 +57,10 @@ useEffect(() => {
           </button>
           <a className="button secondary large" href="/search">Search Library</a>
         </div>
+        <div className="card">
+  <strong>Firebase Test:</strong>
+  <p>{firebaseMessage}</p>
+</div>
       </div>
 
       {status && <p className="status">{status}</p>}
