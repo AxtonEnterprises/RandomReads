@@ -15,7 +15,7 @@
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "latest",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
     "firebase": "^11.0.0"
   },
   "devDependencies": {}
