@@ -3,6 +3,9 @@ import { useState } from 'react';
 import BookCard from '../components/BookCard.jsx';
 import { getRandomBook } from '../services/booksApi.js';
 import { saveBook } from '../services/storage.js';
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 export default function Home() {
   const [book, setBook] = useState(null);
