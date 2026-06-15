@@ -1,10 +1,3 @@
-import { Route, Routes } from 'react-router-dom';
-import Header from './components/Header.jsx';
-import Home from './pages/Home.jsx';
-import Search from './pages/Search.jsx';
-import Reader from './pages/Reader.jsx';
-import Journal from './pages/Journal.jsx';
-import About from './pages/About.jsx';
 import { useEffect } from "react";
 import { db } from "./firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -35,6 +28,8 @@ function App() {
     </div>
   );
 }
+
+export default App;}
 
 export default App;
 
