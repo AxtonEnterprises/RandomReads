@@ -12,6 +12,11 @@ export default function Reader() {
   const [fontSize, setFontSize] = useState(18);
   const [note, setNote] = useState('');
   const [status, setStatus] = useState('');
+  const readableUrl =
+  book.formats["text/html"] ||
+  book.formats["text/plain; charset=utf-8"] ||
+  book.formats["text/plain; charset=us-ascii"] ||
+  book.formats["text/plain"];
 
   useEffect(() => {
     let active = true;
