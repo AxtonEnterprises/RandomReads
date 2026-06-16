@@ -44,6 +44,16 @@ export default function App() {
       </main>
     </>
   );
+}        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/reader/:id" element={<Reader />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/about" element={<About />} />
+        </Routes>
+      </main>
+    </>
+  );
 }  return (
     <>
       <Header />
