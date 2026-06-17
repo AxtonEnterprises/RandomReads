@@ -1,5 +1,4 @@
 import { Shuffle } from 'lucide-react';
-import { useState } from 'react';
 import BookCard from '../components/BookCard.jsx';
 import { getRandomBook } from '../services/booksApi.js';
 import { saveBook } from '../services/storage.js';
