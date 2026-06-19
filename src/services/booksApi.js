@@ -69,6 +69,8 @@ export function getReadableTextUrl(book) {
     book.formats['text/plain'] ||
     null
   );
+}
+
   export async function getBookById(bookId) {
   const response = await fetch(`${API_BASE}/${bookId}`);
 
