@@ -69,4 +69,29 @@ export function getReadableTextUrl(book) {
     book.formats['text/plain'] ||
     null
   );
+  export async function getBookById(bookId) {
+  const response = await fetch(`${API_BASE}/${bookId}`);
+
+  if (!response.ok) {
+    throw new Error('Could not load book');
+  }
+
+  return response.json();
 }
+
+export async function getReadableText(book) {
+  const textUrl = getReadableTextUrl(book);
+
+  if (!textUrl) {
+    return 'This book does not have a readable text format available.';
+  }
+
+  const response = await fetch(textUrl);
+
+  if (!response.ok) {
+    throw new Error('Could not load book text.');
+  }
+
+  return response.text();
+}
+
