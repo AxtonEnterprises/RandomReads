@@ -5,7 +5,7 @@ import { getBookById, getReadableText } from '../services/booksApi.js';
 import { addJournalEntry, saveBook } from '../services/storage.js';
 
 export default function Reader() {
-  const { bookId } = useParams();
+  const { id } = useParams();
   const location = useLocation();
   const [book, setBook] = useState(location.state?.book || null);
   const [text, setText] = useState('Loading reader...');
