@@ -23,7 +23,7 @@ export default function Reader() {
 
     async function loadBook() {
       try {
-        const loadedBook = book || await getBookById(bookId);
+        const loadedBook = book || await getBookById(id);
         if (!active) return;
         setBook(loadedBook);
         const loadedText = await getReadableText(loadedBook);
