@@ -32,7 +32,7 @@ export default function Reader() {
 
     loadBook();
     return () => { active = false; };
-  }, [bookId]);
+  }, [id]);
 
   function handleSave() {
     if (!book) return;
