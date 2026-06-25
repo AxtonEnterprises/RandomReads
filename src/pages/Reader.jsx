@@ -42,7 +42,7 @@ export default function Reader() {
 
   function handleJournal() {
     if (!book || !note.trim()) return;
-    addJournalEntry({ bookId: book.id, title: book.title, author: book.author, note: note.trim() });
+    addJournalEntry({ id: book.id, title: book.title, author: book.author, note: note.trim() });
     setNote('');
     setStatus('Journal note saved.');
   }
