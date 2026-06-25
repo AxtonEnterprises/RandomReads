@@ -1,33 +1,32 @@
 export async function onRequestGet(context) {
   const { searchParams } = new URL(context.request.url);
-  let source = searchParams.get("url");
+  const source = searchParams.get('url');
 
   if (!source) {
-    return new Response("Missing URL", { status: 400 });
+    return new Response('Missing Gutenberg URL', { status: 400 });
   }
 
-  source = source.replace("http://", "https://");
+  const safeSource = source.replace(/^http:\/\//i, 'https://');
 
-  if (!source.startsWith("https://www.gutenberg.org/")) {
-    return new Response("Invalid Gutenberg URL", { status: 400 });
+  if (!safeSource.includes('gutenberg.org')) {
+    return new Response('Only Gutenberg URLs are allowed', { status: 400 });
   }
 
-  const response = await fetch(source, {
-    headers: {
-      "User-Agent": "Random Reads Reader"
-    }
-  });
+  const gutenbergResponse = await fetch(safeSource);
 
-  if (!response.ok) {
-    return new Response("Could not fetch Gutenberg text", { status: 502 });
+  if (!gutenbergResponse.ok) {
+    return new Response(`Gutenberg fetch failed: ${gutenbergResponse.status}`, {
+      status: 502
+    });
   }
 
-  const text = await response.text();
+  const text = await gutenbergResponse.text();
 
   return new Response(text, {
+    status: 200,
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400"
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400'
     }
   });
 }
