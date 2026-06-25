@@ -59,18 +59,21 @@ export async function searchBooks(query = '') {
   const data = await response.json();
   return data.results || [];
 }
-export function getReadableTextUrl(book) {
-  if (!book?.formats) return null;
+export async function getReadableText(book) {
+  const textUrl = getReadableTextUrl(book);
 
-  return (
-    book.formats['text/plain; charset=utf-8'] ||
-    book.formats['text/plain; charset=us-ascii'] ||
-    book.formats['text/plain'] ||
-    Object.entries(book.formats).find(([type]) =>
-      type.startsWith('text/plain')
-    )?.[1] ||
-    null
-  );
+  if (!textUrl) {
+    return 'This book does not have a readable text format available.';
+  }
+
+  const proxyUrl = `/api/book-text?url=${encodeURIComponent(textUrl)}`;
+  const response = await fetch(proxyUrl);
+
+  if (!response.ok) {
+    throw new Error('Could not load book text.');
+  }
+
+  return response.text();
 }
 
   export async function getBookById(bookId) {
