@@ -59,6 +59,35 @@ export async function searchBooks(query = '') {
   const data = await response.json();
   return data.results || [];
 }
+
+export async function getBookById(bookId) {
+  const response = await fetch(`${API_BASE}/${bookId}`);
+
+  if (!response.ok) {
+    throw new Error('Could not load book');
+  }
+
+  return response.json();
+}
+
+export function getReadableTextUrl(book) {
+  if (!book?.formats) {
+    return null;
+  }
+
+  const formats = book.formats;
+
+  return (
+    formats['text/plain; charset=utf-8'] ||
+    formats['text/plain; charset=us-ascii'] ||
+    formats['text/plain'] ||
+    Object.entries(formats).find(([type, url]) =>
+      type.startsWith('text/plain') && typeof url === 'string'
+    )?.[1] ||
+    null
+  );
+}
+
 export async function getReadableText(book) {
   const textUrl = getReadableTextUrl(book);
 
@@ -73,33 +102,11 @@ export async function getReadableText(book) {
     throw new Error('Could not load book text.');
   }
 
-  return response.text();
-}
+  const text = await response.text();
 
-  export async function getBookById(bookId) {
-  const response = await fetch(`${API_BASE}/${bookId}`);
-
-  if (!response.ok) {
-    throw new Error('Could not load book');
+  if (text.trim().startsWith('<!doctype html') || text.trim().startsWith('<html')) {
+    throw new Error('Reader proxy returned HTML instead of book text.');
   }
 
-  return response.json();
+  return text;
 }
-
-export async function getReadableText(book) {
-  const textUrl = getReadableTextUrl(book);
-
-  if (!textUrl) {
-    return 'This book does not have a readable text format available.';
-  }
-
-  const proxyUrl = `/api/book-text?url=${encodeURIComponent(textUrl)}`;
-const response = await fetch(proxyUrl);
-
-  if (!response.ok) {
-    throw new Error('Could not load book text.');
-  }
-
-  return response.text();
-}
-
