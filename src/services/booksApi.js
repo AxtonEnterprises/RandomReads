@@ -90,7 +90,8 @@ export async function getReadableText(book) {
     return 'This book does not have a readable text format available.';
   }
 
-  const response = await fetch(textUrl);
+  const proxyUrl = `/api/book-text?url=${encodeURIComponent(textUrl)}`;
+const response = await fetch(proxyUrl);
 
   if (!response.ok) {
     throw new Error('Could not load book text.');
