@@ -24,7 +24,12 @@ export async function getCachedBooks() {
     Date.now() - Number(cachedAt) < CACHE_MAX_AGE;
 
   if (cacheIsFresh) {
-    return JSON.parse(cachedBooks);
+    try {
+      return JSON.parse(cachedBooks);
+    } catch {
+      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(CACHE_TIME_KEY);
+    }
   }
 
   const books = await fetchBooksFromGutendex();
@@ -81,32 +86,71 @@ export function getReadableTextUrl(book) {
     formats['text/plain; charset=utf-8'] ||
     formats['text/plain; charset=us-ascii'] ||
     formats['text/plain'] ||
-    Object.entries(formats).find(([type, url]) =>
-      type.startsWith('text/plain') && typeof url === 'string'
-    )?.[1] ||
+    Object.entries(formats).find(([type, url]) => {
+      return type.startsWith('text/plain') && typeof url === 'string';
+    })?.[1] ||
     null
   );
+}
+
+export function getHtmlUrl(book) {
+  if (!book?.formats) {
+    return null;
+  }
+
+  const formats = book.formats;
+
+  return (
+    formats['text/html; charset=utf-8'] ||
+    formats['text/html'] ||
+    Object.entries(formats).find(([type, url]) => {
+      return type.startsWith('text/html') && typeof url === 'string';
+    })?.[1] ||
+    null
+  );
+}
+
+export function getCoverImageUrl(book) {
+  if (!book?.formats) {
+    return null;
+  }
+
+  return book.formats['image/jpeg'] || null;
+}
+
+export function getAuthorName(book) {
+  if (!book?.authors?.length) {
+    return 'Unknown author';
+  }
+
+  return book.authors
+    .map((author) => author.name)
+    .filter(Boolean)
+    .join(', ');
 }
 
 export async function getReadableText(book) {
   const textUrl = getReadableTextUrl(book);
 
   if (!textUrl) {
-    return 'This book does not have a readable text format available.';
+    return 'This book does not have a readable plain-text format available.';
   }
 
-  const proxyUrl = `/api/book-text?url=${encodeURIComponent(textUrl)}`;
-  const response = await fetch(proxyUrl);
+  const response = await fetch(textUrl);
 
   if (!response.ok) {
     throw new Error('Could not load book text.');
   }
 
   const text = await response.text();
+  const trimmedText = text.trim().toLowerCase();
 
-  if (text.trim().startsWith('<!doctype html') || text.trim().startsWith('<html')) {
-    throw new Error('Reader proxy returned HTML instead of book text.');
+  if (
+    trimmedText.startsWith('<!doctype html') ||
+    trimmedText.startsWith('<html')
+  ) {
+    throw new Error('Reader loaded HTML instead of book text.');
   }
 
   return text;
-}
+    }
