@@ -1,32 +1,34 @@
 export async function onRequestGet(context) {
-  const { searchParams } = new URL(context.request.url);
-  const source = searchParams.get('url');
+  const url = new URL(context.request.url);
+  const bookUrl = url.searchParams.get('url');
 
-  if (!source) {
-    return new Response('Missing Gutenberg URL', { status: 400 });
+  if (!bookUrl) {
+    return new Response('Missing book URL', { status: 400 });
   }
 
-  const safeSource = source.replace(/^http:\/\//i, 'https://');
-
-  if (!safeSource.includes('gutenberg.org')) {
-    return new Response('Only Gutenberg URLs are allowed', { status: 400 });
+  if (
+    !bookUrl.startsWith('https://www.gutenberg.org/') &&
+    !bookUrl.startsWith('https://gutenberg.org/')
+  ) {
+    return new Response('Invalid book URL', { status: 400 });
   }
 
-  const gutenbergResponse = await fetch(safeSource);
+  const response = await fetch(bookUrl, {
+    headers: {
+      'User-Agent': 'Random Reads Reader'
+    }
+  });
 
-  if (!gutenbergResponse.ok) {
-    return new Response(`Gutenberg fetch failed: ${gutenbergResponse.status}`, {
-      status: 502
-    });
+  if (!response.ok) {
+    return new Response('Could not fetch book text', { status: response.status });
   }
 
-  const text = await gutenbergResponse.text();
+  const text = await response.text();
 
   return new Response(text, {
-    status: 200,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400'
+      'Access-Control-Allow-Origin': '*'
     }
   });
 }
