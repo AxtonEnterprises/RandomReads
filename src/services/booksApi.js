@@ -150,14 +150,5 @@ export async function getReadableText(book) {
     throw new Error('Book text was empty or too short.');
   }
 
-  const trimmedText = text.trim().toLowerCase();
-
-  if (
-    trimmedText.startsWith('<!doctype html') ||
-    trimmedText.startsWith('<html')
-  ) {
-    throw new Error('Reader proxy returned HTML instead of book text.');
-  }
-
   return text;
 }
