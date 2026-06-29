@@ -140,10 +140,16 @@ export async function getReadableText(book) {
   const response = await fetch(proxyUrl);
 
   if (!response.ok) {
-    throw new Error('Could not load book text.');
+    const errorText = await response.text();
+    throw new Error(`Could not load book text: ${errorText}`);
   }
 
   const text = await response.text();
+
+  if (!text || text.trim().length < 100) {
+    throw new Error('Book text was empty or too short.');
+  }
+
   const trimmedText = text.trim().toLowerCase();
 
   if (
