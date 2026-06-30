@@ -39,12 +39,11 @@ export default function Reader() {
           setText(loadedText.slice(0, 35000));
         }
       } catch (error) {
-  console.error('Reader load error:', error);
+        console.error('Reader load error:', error);
 
-  if (active) {
-    setText(`Could not load the reader text. ${error.message}`);
-  }
-      }
+        if (active) {
+          setText(`Could not load the reader text. ${error.message}`);
+        }
       } finally {
         if (active) setLoading(false);
       }
