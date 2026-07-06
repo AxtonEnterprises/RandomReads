@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import ReaderControls from '../components/ReaderControls.jsx';
 import { getBookById, getStructuredBookText } from '../services/booksApi.js';
 import { addJournalEntry, saveBook } from '../services/storage.js';
-
-const PARAGRAPHS_PER_PAGE = 12;
+import { paginateParagraphs } from '../utils/paginateText.js';
 
 export default function Reader() {
   const { id } = useParams();
   const location = useLocation();
+  const readerRef = useRef(null);
 
   const [book, setBook] = useState(location.state?.book || null);
   const [paragraphs, setParagraphs] = useState([]);
@@ -19,6 +19,7 @@ export default function Reader() {
   const [loading, setLoading] = useState(true);
   const [pageIndex, setPageIndex] = useState(0);
   const [showToc, setShowToc] = useState(false);
+  const [readerSize, setReaderSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     let active = true;
@@ -31,24 +32,18 @@ export default function Reader() {
 
       try {
         const loadedBook = book || await getBookById(id);
-
         if (!active) return;
 
         setBook(loadedBook);
 
         const structuredBook = await getStructuredBookText(loadedBook);
-
         if (!active) return;
 
         setParagraphs(structuredBook.paragraphs || []);
         setChapters(structuredBook.chapters || []);
       } catch (error) {
-        console.error('Reader load error:', error);
-
         if (active) {
-          setParagraphs([
-            `Could not load the reader text. ${error.message}`
-          ]);
+          setParagraphs([`Could not load the reader text. ${error.message}`]);
         }
       } finally {
         if (active) setLoading(false);
@@ -62,43 +57,69 @@ export default function Reader() {
     };
   }, [id]);
 
-  const pages = useMemo(() => {
-    const result = [];
+  useEffect(() => {
+    function updateSize() {
+      if (!readerRef.current) return;
 
-    for (let i = 0; i < paragraphs.length; i += PARAGRAPHS_PER_PAGE) {
-      result.push(paragraphs.slice(i, i + PARAGRAPHS_PER_PAGE));
+      const rect = readerRef.current.getBoundingClientRect();
+
+      setReaderSize({
+        width: rect.width,
+        height: rect.height
+      });
     }
 
-    return result;
-  }, [paragraphs]);
+    updateSize();
+
+    window.addEventListener('resize', updateSize);
+    window.addEventListener('orientationchange', updateSize);
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      window.removeEventListener('orientationchange', updateSize);
+    };
+  }, []);
+
+  const pages = useMemo(() => {
+    return paginateParagraphs({
+      paragraphs,
+      containerWidth: readerSize.width,
+      containerHeight: readerSize.height,
+      fontSize
+    });
+  }, [paragraphs, readerSize, fontSize]);
 
   const totalPages = Math.max(pages.length, 1);
   const currentPage = pages[pageIndex] || [];
+  const progress = totalPages > 1 ? Math.round(((pageIndex + 1) / totalPages) * 100) : 0;
 
-  const progress =
-    totalPages > 1
-      ? Math.round(((pageIndex + 1) / totalPages) * 100)
-      : 0;
+  useEffect(() => {
+    if (pageIndex > totalPages - 1) {
+      setPageIndex(Math.max(totalPages - 1, 0));
+    }
+  }, [totalPages, pageIndex]);
 
   function goToPage(newPageIndex) {
-    const safePageIndex = Math.min(
-      Math.max(newPageIndex, 0),
-      totalPages - 1
-    );
-
+    const safePageIndex = Math.min(Math.max(newPageIndex, 0), totalPages - 1);
     setPageIndex(safePageIndex);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function goToChapter(paragraphIndex) {
-    const targetPage = Math.floor(paragraphIndex / PARAGRAPHS_PER_PAGE);
-    setShowToc(false);
-    goToPage(targetPage);
+    let counted = 0;
+
+    for (let i = 0; i < pages.length; i += 1) {
+      counted += pages[i].length;
+
+      if (counted > paragraphIndex) {
+        setShowToc(false);
+        goToPage(i);
+        return;
+      }
+    }
   }
 
   function handleSave() {
     if (!book) return;
-
     saveBook(book);
     setStatus('Book saved.');
   }
@@ -141,17 +162,6 @@ export default function Reader() {
         >
           {showToc ? 'Hide contents' : 'Table of contents'}
         </button>
-
-        {book?.htmlUrl && (
-          <a
-            className="button secondary"
-            href={book.htmlUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open full source
-          </a>
-        )}
       </div>
 
       {status && <p className="status">{status}</p>}
@@ -160,32 +170,30 @@ export default function Reader() {
         <aside className="journal-box">
           <h2>Table of contents</h2>
 
-          {chapters.length ? (
-            <div className="toc-list">
-              {chapters.map((chapter, index) => (
-                <button
-                  key={`${chapter.title}-${chapter.paragraphIndex}-${index}`}
-                  className="toc-link"
-                  onClick={() => goToChapter(chapter.paragraphIndex)}
-                >
-                  {chapter.title}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p>No chapters detected for this book.</p>
-          )}
+          <div className="toc-list">
+            {chapters.map((chapter, index) => (
+              <button
+                key={`${chapter.title}-${chapter.paragraphIndex}-${index}`}
+                className="toc-link"
+                onClick={() => goToChapter(chapter.paragraphIndex)}
+              >
+                {chapter.title}
+              </button>
+            ))}
+          </div>
         </aside>
       )}
 
       <div className="reader-progress">
-        <span>
-          Page {pageIndex + 1} of {totalPages}
-        </span>
+        <span>Page {pageIndex + 1} of {totalPages}</span>
         <span>{progress}%</span>
       </div>
 
-      <article className="reader-text" style={{ fontSize: `${fontSize}px` }}>
+      <article
+        ref={readerRef}
+        className="reader-window"
+        style={{ fontSize: `${fontSize}px` }}
+      >
         {loading ? (
           <p>Loading reader...</p>
         ) : (
