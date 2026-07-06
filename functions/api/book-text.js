@@ -1,47 +1,40 @@
 export async function onRequestGet(context) {
   const requestUrl = new URL(context.request.url);
-  const rawBookUrl = requestUrl.searchParams.get('url');
+  const id = requestUrl.searchParams.get('id');
 
-  if (!rawBookUrl) {
-    return new Response('Missing book URL', { status: 400 });
+  if (!id || !/^\d+$/.test(id)) {
+    return new Response('Missing or invalid book ID', { status: 400 });
   }
 
-  let bookUrl;
-
-  try {
-    bookUrl = new URL(rawBookUrl);
-  } catch {
-    return new Response('Invalid book URL', { status: 400 });
-  }
-
-  const allowedHosts = [
-    'www.gutenberg.org',
-    'gutenberg.org'
+  const possibleUrls = [
+    `https://www.gutenberg.org/files/${id}/${id}-0.txt`,
+    `https://www.gutenberg.org/files/${id}/${id}.txt`,
+    `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`
   ];
 
-  if (!allowedHosts.includes(bookUrl.hostname)) {
-    return new Response(`Blocked host: ${bookUrl.hostname}`, { status: 400 });
-  }
-
-  const response = await fetch(bookUrl.toString(), {
-    headers: {
-      'User-Agent': 'Random Reads Reader'
-    }
-  });
-
-  if (!response.ok) {
-    return new Response(`Could not fetch book text: ${response.status}`, {
-      status: response.status
+  for (const bookUrl of possibleUrls) {
+    const response = await fetch(bookUrl, {
+      headers: {
+        'User-Agent': 'Random Reads Reader'
+      }
     });
+
+    if (response.ok) {
+      const text = await response.text();
+
+      if (text && text.trim().length > 100) {
+        return new Response(text, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'public, max-age=86400'
+          }
+        });
+      }
+    }
   }
 
-  const text = await response.text();
-
-  return new Response(text, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400'
-    }
+  return new Response(`Could not find readable text for book ID ${id}`, {
+    status: 404
   });
 }
