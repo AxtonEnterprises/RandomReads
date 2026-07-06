@@ -130,13 +130,11 @@ export function getAuthorName(book) {
 }
 
 export async function getReadableText(book) {
-  const textUrl = getReadableTextUrl(book);
-
-  if (!textUrl) {
-    return 'This book does not have a readable plain-text format available.';
+  if (!book?.id) {
+    throw new Error('Missing book ID.');
   }
 
-  const proxyUrl = `/api/book-text?url=${encodeURIComponent(textUrl)}`;
+  const proxyUrl = `/api/book-text?id=${encodeURIComponent(book.id)}`;
   const response = await fetch(proxyUrl);
 
   if (!response.ok) {
