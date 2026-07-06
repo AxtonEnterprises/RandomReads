@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import ReaderControls from '../components/ReaderControls.jsx';
-import { getBookById, getReadableText } from '../services/booksApi.js';
+import { getBookById, getStructuredBookText } from '../services/booksApi.js';
 import { addJournalEntry, saveBook } from '../services/storage.js';
 
 export default function Reader() {
@@ -29,7 +29,8 @@ export default function Reader() {
 
         setBook(loadedBook);
 
-        const loadedText = await getReadableText(loadedBook);
+        const structuredBook = await getStructuredBookText(loadedBook);
+const loadedText = structuredBook.paragraphs.join('\n\n');
 
         if (!active) return;
 
