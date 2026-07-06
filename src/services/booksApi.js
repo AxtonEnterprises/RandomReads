@@ -150,3 +150,17 @@ export async function getReadableText(book) {
 
   return text;
 }
+export async function getStructuredBookText(book) {
+  if (!book?.id) {
+    throw new Error('Missing book ID.');
+  }
+
+  const response = await fetch(`/api/book?id=${encodeURIComponent(book.id)}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.error || 'Could not load structured book text.');
+  }
+
+  return response.json();
+}
