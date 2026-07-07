@@ -22,6 +22,7 @@ export default function Reader() {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
+  const [progressLoaded, setProgressLoaded] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [showToc, setShowToc] = useState(false);
   const [readerSize, setReaderSize] = useState({ width: 0, height: 0 });
