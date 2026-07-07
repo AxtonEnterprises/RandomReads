@@ -45,3 +45,28 @@ export function addJournalEntry(entry) {
   writeKey(JOURNAL_KEY, next);
   return next;
 }
+export function saveReadingProgress(bookId, pageIndex) {
+  if (!bookId && bookId !== 0) return;
+
+  const key = `readingProgress:${bookId}`;
+  localStorage.setItem(key, JSON.stringify({
+    pageIndex,
+    updatedAt: Date.now()
+  }));
+}
+
+export function getReadingProgress(bookId) {
+  if (!bookId && bookId !== 0) return null;
+
+  const key = `readingProgress:${bookId}`;
+  const saved = localStorage.getItem(key);
+
+  if (!saved) return null;
+
+  try {
+    return JSON.parse(saved);
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
