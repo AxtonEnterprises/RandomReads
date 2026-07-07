@@ -35,6 +35,7 @@ export default function Reader() {
       setParagraphs([]);
       setChapters([]);
       setPageIndex(0);
+      setProgressLoaded(false);
 
       try {
         const loadedBook = book || await getBookById(id);
@@ -62,7 +63,12 @@ export default function Reader() {
       active = false;
     };
   }, [id]);
+  
+useEffect(() => {
+  if (!book?.id || !progressLoaded) return;
 
+  saveReadingProgress(book.id, pageIndex);
+}, [book?.id, pageIndex, progressLoaded]);
   useEffect(() => {
     function updateSize() {
       if (!readerRef.current) return;
@@ -96,6 +102,17 @@ export default function Reader() {
   }, [paragraphs, readerSize, fontSize]);
 
   const totalPages = Math.max(pages.length, 1);
+  useEffect(() => {
+  if (!book?.id || !totalPages || progressLoaded) return;
+
+  const saved = getReadingProgress(book.id);
+
+  if (saved?.pageIndex >= 0) {
+    setPageIndex(Math.min(saved.pageIndex, totalPages - 1));
+  }
+
+  setProgressLoaded(true);
+}, [book?.id, totalPages, progressLoaded]);
   const currentPage = pages[pageIndex] || [];
   const progress = totalPages > 1 ? Math.round(((pageIndex + 1) / totalPages) * 100) : 0;
 
