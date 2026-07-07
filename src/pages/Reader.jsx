@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import ReaderControls from '../components/ReaderControls.jsx';
 import { getBookById, getStructuredBookText } from '../services/booksApi.js';
-import { addJournalEntry, saveBook } from '../services/storage.js';
+import {
+  addJournalEntry,
+  getReadingProgress,
+  saveBook,
+  saveReadingProgress
+} from '../services/storage.js';
 import { paginateParagraphs } from '../utils/paginateText.js';
 
 export default function Reader() {
