@@ -32,8 +32,10 @@ export function paginateParagraphs({
 
   const pages = [];
   let currentPage = [];
+  let currentStartIndex = 0;
 
-  for (const block of readableBlocks) {
+  for (let index = 0; index < readableBlocks.length; index += 1) {
+    const block = readableBlocks[index];
     const testPage = [...currentPage, block];
 
     measurer.innerHTML = testPage
@@ -41,15 +43,23 @@ export function paginateParagraphs({
       .join('');
 
     if (measurer.scrollHeight > usableHeight && currentPage.length) {
-      pages.push(currentPage);
+      pages.push({
+        startIndex: currentStartIndex,
+        blocks: currentPage
+      });
+
       currentPage = [block];
+      currentStartIndex = index;
     } else {
       currentPage = testPage;
     }
   }
 
   if (currentPage.length) {
-    pages.push(currentPage);
+    pages.push({
+      startIndex: currentStartIndex,
+      blocks: currentPage
+    });
   }
 
   document.body.removeChild(measurer);
