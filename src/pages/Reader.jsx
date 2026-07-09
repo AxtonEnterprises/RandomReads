@@ -88,13 +88,14 @@ export default function Reader() {
   }, []);
 
   const pages = useMemo(() => {
-    return paginateParagraphs({
-      paragraphs,
-      containerWidth: readerSize.width,
-      containerHeight: readerSize.height,
-      fontSize
-    });
-  }, [paragraphs, readerSize, fontSize]);
+  return paginateParagraphs({
+    paragraphs,
+    containerWidth: readerSize.width,
+    containerHeight: readerSize.height,
+    fontSize,
+    className: 'reader-window'
+  });
+}, [paragraphs, readerSize, fontSize]);
 
   const totalPages = Math.max(pages.length, 1);
   const currentPage = pages[pageIndex]?.blocks || [];
