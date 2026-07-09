@@ -1,4 +1,4 @@
-const PAGE_SAFETY_BUFFER = 40;
+const PAGE_SAFETY_BUFFER = 90;
 const MAX_CHUNK_LENGTH = 900;
 
 export function paginateParagraphs({
