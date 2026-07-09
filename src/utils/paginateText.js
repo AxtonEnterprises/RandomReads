@@ -1,5 +1,5 @@
-const PAGE_PADDING = 32;
-const PAGE_SAFETY_BUFFER = 80;
+const PAGE_SAFETY_BUFFER = 140;
+const MAX_CHUNK_LENGTH = 650;
 
 export function paginateParagraphs({
   paragraphs,
@@ -11,6 +11,7 @@ export function paginateParagraphs({
     return [];
   }
 
+  const readableBlocks = splitLongParagraphs(paragraphs);
   const usableHeight = containerHeight - PAGE_SAFETY_BUFFER;
 
   const measurer = document.createElement('div');
@@ -24,7 +25,7 @@ export function paginateParagraphs({
   measurer.style.fontSize = `${fontSize}px`;
   measurer.style.lineHeight = '1.7';
   measurer.style.fontFamily = 'inherit';
-  measurer.style.padding = `${PAGE_PADDING}px`;
+  measurer.style.padding = '32px';
   measurer.style.boxSizing = 'border-box';
 
   document.body.appendChild(measurer);
@@ -32,18 +33,16 @@ export function paginateParagraphs({
   const pages = [];
   let currentPage = [];
 
-  for (const paragraph of paragraphs) {
-    const testPage = [...currentPage, paragraph];
+  for (const block of readableBlocks) {
+    const testPage = [...currentPage, block];
 
     measurer.innerHTML = testPage
-      .map((text) => `<p>${escapeHtml(text)}</p>`)
+      .map((text) => `<p style="margin:0 0 1.2em;">${escapeHtml(text)}</p>`)
       .join('');
 
-    const tooTall = measurer.scrollHeight > usableHeight;
-
-    if (tooTall && currentPage.length) {
+    if (measurer.scrollHeight > usableHeight && currentPage.length) {
       pages.push(currentPage);
-      currentPage = [paragraph];
+      currentPage = [block];
     } else {
       currentPage = testPage;
     }
@@ -56,6 +55,37 @@ export function paginateParagraphs({
   document.body.removeChild(measurer);
 
   return pages;
+}
+
+function splitLongParagraphs(paragraphs) {
+  const blocks = [];
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= MAX_CHUNK_LENGTH) {
+      blocks.push(paragraph);
+      continue;
+    }
+
+    const sentences = paragraph.match(/[^.!?]+[.!?]+["”']?|.+$/g) || [paragraph];
+    let chunk = '';
+
+    for (const sentence of sentences) {
+      const nextChunk = `${chunk} ${sentence}`.trim();
+
+      if (nextChunk.length > MAX_CHUNK_LENGTH && chunk) {
+        blocks.push(chunk);
+        chunk = sentence.trim();
+      } else {
+        chunk = nextChunk;
+      }
+    }
+
+    if (chunk) {
+      blocks.push(chunk);
+    }
+  }
+
+  return blocks;
 }
 
 function escapeHtml(text) {
