@@ -1,4 +1,4 @@
-const PAGE_PADDING = 48;
+const PAGE_PADDING = 32;
 const PAGE_SAFETY_BUFFER = 80;
 
 export function paginateParagraphs({
