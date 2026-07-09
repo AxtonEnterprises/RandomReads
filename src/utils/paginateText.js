@@ -1,32 +1,27 @@
-const PAGE_SAFETY_BUFFER = 90;
-const MAX_CHUNK_LENGTH = 900;
+const MAX_CHUNK_LENGTH = 750;
 
 export function paginateParagraphs({
   paragraphs,
   containerWidth,
   containerHeight,
-  fontSize
+  fontSize,
+  className = ''
 }) {
-  if (!paragraphs?.length || !containerWidth || !containerHeight) {
-    return [];
-  }
+  if (!paragraphs?.length || !containerWidth || !containerHeight) return [];
 
   const readableBlocks = splitLongParagraphs(paragraphs);
-  const usableHeight = containerHeight - PAGE_SAFETY_BUFFER;
+  const measurer = document.createElement('article');
 
-  const measurer = document.createElement('div');
-
+  measurer.className = className;
   measurer.style.position = 'absolute';
   measurer.style.visibility = 'hidden';
   measurer.style.pointerEvents = 'none';
   measurer.style.left = '-9999px';
   measurer.style.top = '0';
   measurer.style.width = `${containerWidth}px`;
+  measurer.style.height = `${containerHeight}px`;
   measurer.style.fontSize = `${fontSize}px`;
-  measurer.style.lineHeight = '1.7';
-  measurer.style.fontFamily = 'inherit';
-  measurer.style.padding = '32px';
-  measurer.style.boxSizing = 'border-box';
+  measurer.style.overflow = 'hidden';
 
   document.body.appendChild(measurer);
 
@@ -39,10 +34,12 @@ export function paginateParagraphs({
     const testPage = [...currentPage, block];
 
     measurer.innerHTML = testPage
-      .map((text) => `<p style="margin:0 0 1.2em;">${escapeHtml(text)}</p>`)
+      .map((text) => `<p>${escapeHtml(text)}</p>`)
       .join('');
 
-    if (measurer.scrollHeight > usableHeight && currentPage.length) {
+    const fits = measurer.scrollHeight <= measurer.clientHeight;
+
+    if (!fits && currentPage.length) {
       pages.push({
         startIndex: currentStartIndex,
         blocks: currentPage
@@ -63,7 +60,6 @@ export function paginateParagraphs({
   }
 
   document.body.removeChild(measurer);
-
   return pages;
 }
 
@@ -90,9 +86,7 @@ function splitLongParagraphs(paragraphs) {
       }
     }
 
-    if (chunk) {
-      blocks.push(chunk);
-    }
+    if (chunk) blocks.push(chunk);
   }
 
   return blocks;
