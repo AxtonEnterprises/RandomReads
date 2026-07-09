@@ -85,15 +85,44 @@ p { line-height: 1.65; }
 .search-bar input { border: 0; outline: 0; min-width: 0; background: transparent; }
 .search-bar button { border: 0; border-radius: 999px; background: var(--primary); color: white; padding: 0.65rem 0.9rem; font-weight: 800; }
 
-.reader-page { display: grid; gap: 1rem; }
-.reader-topbar { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
-.reader-topbar h1 { font-size: clamp(2rem, 7vw, 3.6rem); }
-.back-link { color: var(--primary); font-weight: 800; }
-.reader-controls { display: flex; align-items: center; gap: 0.5rem; background: white; border: 1px solid var(--line); border-radius: 999px; padding: 0.35rem; }
-.reader-controls button { border: 0; background: var(--ink); color: white; border-radius: 999px; padding: 0.45rem 0.65rem; font-weight: 900; }
-.reader-text { background: #fffdf7; border: 1px solid var(--line); border-radius: 24px; padding: clamp(1rem, 4vw, 2.2rem); line-height: 1.75; max-height: 70vh; overflow-y: auto; }
-.reader-text p { margin: 0 0 1.1rem; }
-.journal-box, .panel { padding: 1rem; }
+.reader-page {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.reader-topbar {
+  flex-shrink: 0;
+}
+
+.button-row,
+.reader-progress,
+.reader-nav {
+  flex-shrink: 0;
+}
+
+.reader-window {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  padding: 32px;
+  box-sizing: border-box;
+  background: #fffdf7;
+  border: 1px solid #ddd6c7;
+  border-radius: 28px;
+  line-height: 1.7;
+}
+
+.reader-window p {
+  margin: 0 0 1.2em;
+}
+
+.journal-box {
+  display: none;
+}
 .journal-box textarea { width: 100%; min-height: 120px; resize: vertical; border: 1px solid var(--line); border-radius: 18px; padding: 1rem; margin-bottom: 0.8rem; }
 .note-card { border-top: 1px solid var(--line); padding: 0.9rem 0; }
 .note-card small { display: block; color: var(--muted); margin-top: 0.25rem; }
