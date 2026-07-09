@@ -63,12 +63,7 @@ export default function Reader() {
       active = false;
     };
   }, [id]);
-  
-useEffect(() => {
-  if (!book?.id || !progressLoaded) return;
 
-  saveReadingProgress(book.id, pageIndex);
-}, [book?.id, pageIndex, progressLoaded]);
   useEffect(() => {
     function updateSize() {
       if (!readerRef.current) return;
@@ -102,45 +97,42 @@ useEffect(() => {
   }, [paragraphs, readerSize, fontSize]);
 
   const totalPages = Math.max(pages.length, 1);
-  useEffect(() => {
-  if (!book?.id || !totalPages || progressLoaded) return;
-
-  const saved = getReadingProgress(book.id);
-
-  if (saved?.pageIndex >= 0) {
-    setPageIndex(Math.min(saved.pageIndex, totalPages - 1));
-  }
-
-  setProgressLoaded(true);
-}, [book?.id, totalPages, progressLoaded]);
   const currentPage = pages[pageIndex]?.blocks || [];
-  const progress = totalPages > 1 ? Math.round(((pageIndex + 1) / totalPages) * 100) : 0;
+  const progress =
+    totalPages > 1 ? Math.round(((pageIndex + 1) / totalPages) * 100) : 0;
 
   useEffect(() => {
-  if (!book?.id || !pages.length || progressLoaded) return;
+    if (!book?.id || !pages.length || progressLoaded) return;
 
-  const saved = getReadingProgress(book.id);
+    const saved = getReadingProgress(book.id);
 
-  if (saved?.paragraphIndex >= 0) {
-    const restoredPageIndex = pages.findIndex((page, index) => {
-      const nextPage = pages[index + 1];
-      return (
-        saved.paragraphIndex >= page.startIndex &&
-        (!nextPage || saved.paragraphIndex < nextPage.startIndex)
-      );
-    });
+    if (saved?.paragraphIndex >= 0) {
+      const restoredPageIndex = pages.findIndex((page, index) => {
+        const nextPage = pages[index + 1];
 
-    setPageIndex(restoredPageIndex >= 0 ? restoredPageIndex : 0);
-  }
+        return (
+          saved.paragraphIndex >= page.startIndex &&
+          (!nextPage || saved.paragraphIndex < nextPage.startIndex)
+        );
+      });
 
-  setProgressLoaded(true);
-}, [book?.id, pages, progressLoaded]);
+      setPageIndex(restoredPageIndex >= 0 ? restoredPageIndex : 0);
+    }
 
-useEffect(() => {
-  if (!book?.id || !progressLoaded || !pages[pageIndex]) return;
+    setProgressLoaded(true);
+  }, [book?.id, pages, progressLoaded]);
 
-  saveReadingProgress(book.id, pages[pageIndex].startIndex);
-}, [book?.id, pageIndex, pages, progressLoaded]);
+  useEffect(() => {
+    if (!book?.id || !progressLoaded || !pages[pageIndex]) return;
+
+    saveReadingProgress(book.id, pages[pageIndex].startIndex);
+  }, [book?.id, pageIndex, pages, progressLoaded]);
+
+  useEffect(() => {
+    if (pageIndex > totalPages - 1) {
+      setPageIndex(Math.max(totalPages - 1, 0));
+    }
+  }, [totalPages, pageIndex]);
 
   function goToPage(newPageIndex) {
     const safePageIndex = Math.min(Math.max(newPageIndex, 0), totalPages - 1);
@@ -148,19 +140,17 @@ useEffect(() => {
   }
 
   function goToChapter(paragraphIndex) {
-  const targetPageIndex = pages.findIndex((page, index) => {
-    const nextPage = pages[index + 1];
+    const targetPageIndex = pages.findIndex((page, index) => {
+      const nextPage = pages[index + 1];
 
-    return (
-      paragraphIndex >= page.startIndex &&
-      (!nextPage || paragraphIndex < nextPage.startIndex)
-    );
-  });
+      return (
+        paragraphIndex >= page.startIndex &&
+        (!nextPage || paragraphIndex < nextPage.startIndex)
+      );
+    });
 
-  setShowToc(false);
-  goToPage(targetPageIndex >= 0 ? targetPageIndex : 0);
-  }
-    }
+    setShowToc(false);
+    goToPage(targetPageIndex >= 0 ? targetPageIndex : 0);
   }
 
   function handleSave() {
