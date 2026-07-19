@@ -1,5 +1,6 @@
 import { BookOpen, Home, Info, Library, Search } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { LogIn } from "lucide-react";
 
 const links = [
   { to: '/', label: 'Home', icon: Home },
@@ -27,5 +28,9 @@ export default function Header() {
         ))}
       </nav>
     </header>
+    <Link to="/login">
+  <LogIn size={20} />
+  <span>Log In</span>
+</Link>
   );
 }
