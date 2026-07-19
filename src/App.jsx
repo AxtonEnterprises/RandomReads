@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
 import { db } from "./firebase";
+import Login from "./pages/Login.jsx";
 
 import Header from "./components/Header";
 import Home from "./pages/Home";
@@ -12,6 +13,7 @@ import Journal from "./pages/Journal";
 import About from "./pages/About";
 
 export default function App() {
+  <Route path="/login" element={<Login />} />
   useEffect(() => {
     async function testFirebase() {
       try {
