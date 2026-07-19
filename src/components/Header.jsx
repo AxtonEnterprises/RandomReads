@@ -5,7 +5,7 @@ export default function Header() {
   return (
     <header className="site-header">
       <Link to="/" className="site-logo">
-        Random Reads
+        <h1>Random Reads</h1>
       </Link>
 
       <nav className="site-nav">
