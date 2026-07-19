@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
+  getRedirectResult,
   signInWithEmailAndPassword,
-  signInWithPopup
+  signInWithRedirect
 } from "firebase/auth";
+
 import { auth, googleProvider } from "../firebase";
 import "./Login.css";
 
@@ -17,11 +19,30 @@ export default function Login() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    async function finishGoogleLogin() {
+      try {
+        const result = await getRedirectResult(auth);
+
+        if (result?.user) {
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Google redirect error:", error);
+        setStatus(getAuthErrorMessage(error));
+      }
+    }
+
+    finishGoogleLogin();
+  }, [navigate]);
+
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!email.trim() || !password) {
-      setStatus("Enter your email and password.");
+    const cleanedEmail = email.trim();
+
+    if (!cleanedEmail || !password) {
+      setStatus("Enter your email address and password.");
       return;
     }
 
@@ -37,20 +58,21 @@ export default function Login() {
       if (mode === "register") {
         await createUserWithEmailAndPassword(
           auth,
-          email.trim(),
+          cleanedEmail,
           password
         );
       } else {
         await signInWithEmailAndPassword(
           auth,
-          email.trim(),
+          cleanedEmail,
           password
         );
       }
 
       navigate("/");
     } catch (error) {
-      setStatus(getAuthErrorMessage(error.code));
+      console.error("Email authentication error:", error);
+      setStatus(getAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -61,11 +83,10 @@ export default function Login() {
     setStatus("");
 
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate("/");
+      await signInWithRedirect(auth, googleProvider);
     } catch (error) {
-      setStatus(getAuthErrorMessage(error.code));
-    } finally {
+      console.error("Google authentication error:", error);
+      setStatus(getAuthErrorMessage(error));
       setLoading(false);
     }
   }
@@ -107,6 +128,7 @@ export default function Login() {
             placeholder="reader@example.com"
             autoComplete="email"
             disabled={loading}
+            required
           />
 
           <label htmlFor="login-password">Password</label>
@@ -123,6 +145,8 @@ export default function Login() {
                 : "new-password"
             }
             disabled={loading}
+            minLength={6}
+            required
           />
 
           {status && (
@@ -177,10 +201,10 @@ export default function Login() {
   );
 }
 
-function getAuthErrorMessage(code) {
-  switch (code) {
+function getAuthErrorMessage(error) {
+  switch (error?.code) {
     case "auth/email-already-in-use":
-      return "An account already exists with that email.";
+      return "An account already exists with that email address.";
 
     case "auth/invalid-email":
       return "Enter a valid email address.";
@@ -188,28 +212,35 @@ function getAuthErrorMessage(code) {
     case "auth/invalid-credential":
     case "auth/wrong-password":
     case "auth/user-not-found":
-      return "The email or password is incorrect.";
+      return "The email address or password is incorrect.";
 
     case "auth/weak-password":
       return "Password must be at least 6 characters.";
 
-    case "auth/popup-closed-by-user":
-      return "Google sign-in was cancelled.";
+    case "auth/operation-not-allowed":
+      return "This sign-in method has not been enabled in Firebase.";
+
+    case "auth/unauthorized-domain":
+      return "randomreads.pages.dev must be added to Firebase authorized domains.";
+
+    case "auth/network-request-failed":
+      return "A network error occurred. Check your connection and try again.";
+
+    case "auth/too-many-requests":
+      return "Too many unsuccessful attempts. Wait a moment and try again.";
+
+    case "auth/account-exists-with-different-credential":
+      return "An account already exists with this email using another login method.";
 
     case "auth/popup-blocked":
       return "The browser blocked the Google sign-in window.";
 
-    case "auth/unauthorized-domain":
-      return "This website is not authorized for Firebase login.";
-
-    case "auth/network-request-failed":
-      return "Network error. Check your connection and try again.";
-
-    case "auth/too-many-requests":
-      return "Too many attempts. Wait a moment and try again.";
+    case "auth/popup-closed-by-user":
+      return "Google sign-in was cancelled.";
 
     default:
-      console.error("Firebase authentication error:", code);
-      return "Unable to complete login. Please try again.";
+      return error?.code
+        ? `${error.code}: ${error.message}`
+        : "Unable to complete login. Please try again.";
   }
 }
