@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
-  getRedirectResult,
   signInWithEmailAndPassword,
-  signInWithRedirect
+  signInWithPopup
 } from "firebase/auth";
 
 import { auth, googleProvider } from "../firebase";
@@ -18,23 +17,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    async function finishGoogleLogin() {
-      try {
-        const result = await getRedirectResult(auth);
-
-        if (result?.user) {
-          navigate("/");
-        }
-      } catch (error) {
-        console.error("Google redirect error:", error);
-        setStatus(getAuthErrorMessage(error));
-      }
-    }
-
-    finishGoogleLogin();
-  }, [navigate]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -83,10 +65,12 @@ export default function Login() {
     setStatus("");
 
     try {
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
+      navigate("/");
     } catch (error) {
       console.error("Google authentication error:", error);
       setStatus(getAuthErrorMessage(error));
+    } finally {
       setLoading(false);
     }
   }
@@ -221,7 +205,10 @@ function getAuthErrorMessage(error) {
       return "This sign-in method has not been enabled in Firebase.";
 
     case "auth/unauthorized-domain":
-      return "randomreads.pages.dev must be added to Firebase authorized domains.";
+      return "This website is not authorized for Firebase Authentication.";
+
+    case "auth/requests-from-referer-https://randomreads.pages.dev-are-blocked":
+      return "Google Cloud is blocking requests from randomreads.pages.dev.";
 
     case "auth/network-request-failed":
       return "A network error occurred. Check your connection and try again.";
@@ -233,12 +220,17 @@ function getAuthErrorMessage(error) {
       return "An account already exists with this email using another login method.";
 
     case "auth/popup-blocked":
-      return "The browser blocked the Google sign-in window.";
+      return "The browser blocked the Google sign-in window. Allow popups and try again.";
 
     case "auth/popup-closed-by-user":
-      return "Google sign-in was cancelled.";
+      return "Google sign-in was cancelled before it finished.";
+
+    case "auth/cancelled-popup-request":
+      return "Another Google sign-in request was already open.";
 
     default:
+      console.error("Unhandled Firebase authentication error:", error);
+
       return error?.code
         ? `${error.code}: ${error.message}`
         : "Unable to complete login. Please try again.";
